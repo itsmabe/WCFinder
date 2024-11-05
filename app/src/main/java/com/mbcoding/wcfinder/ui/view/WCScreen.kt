@@ -51,10 +51,12 @@ fun WCScreen(viewModel: WCViewModel, cameraPositionState: CameraPositionState) {
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
-        onResult = {
-            scope.launch {
-                currentLocation = context.currentLocation()
-            }
+        onResult = { isGranted ->
+            if (isGranted)
+                scope.launch {
+                    currentLocation = context.currentLocation()
+                    viewModel.processIntent(WCIntent.GetWCData, currentLocation)
+                }
         }
     )
 
