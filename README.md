@@ -2,7 +2,7 @@
 
 
 
-**WCFinder** is an Android app designed to help users quickly locate nearby restrooms. Developed with Kotlin and following Clean Architecture (MVI pattern) and the Repository pattern, WCFinder provides a seamless and efficient user experience for finding restroom locations with real-time data.
+**WCFinder**  is an Android app designed to help users quickly locate nearby restrooms within a 5 km radius of their current position. Developed with Kotlin and following Clean Architecture (MVI pattern) and the Repository pattern, WCFinder provides a seamless and efficient user experience for finding restroom locations with real-time data.
 
 
 
