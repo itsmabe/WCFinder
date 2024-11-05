@@ -35,7 +35,7 @@ fun WCList(
         modifier = Modifier.padding(start = 16.dp),
         text = if (pagingItems.itemSnapshotList.isNotEmpty())
             "Toilettes autour de moi" else
-            "Aucune toilette trouvéé dans un rayon de 5 km",
+            "Aucune toilette trouvée dans un rayon de 5 km",
         fontSize = 20.sp,
         fontWeight = FontWeight.Medium
     )
