@@ -3,7 +3,6 @@ package com.mbcoding.wcfinder.domain.usecase
 import com.google.android.gms.maps.model.LatLng
 import com.mbcoding.wcfinder.data.mapper.toWC
 import com.mbcoding.wcfinder.data.remote.WCRepository
-import com.mbcoding.wcfinder.domain.model.WC
 import javax.inject.Inject
 
 

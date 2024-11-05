@@ -9,4 +9,5 @@ package com.mbcoding.wcfinder.ui.intent
 
 sealed class WCIntent {
     data object GetWCData : WCIntent()
+    data object GetCurrentLocation : WCIntent()
 }

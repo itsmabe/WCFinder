@@ -8,15 +8,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
@@ -30,22 +25,22 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberMarkerState
 import com.mbcoding.wcfinder.R
 import com.mbcoding.wcfinder.domain.model.WC
-import com.mbcoding.wcfinder.utils.currentLocation
 import kotlinx.coroutines.launch
 
 @Composable
-fun WCMap(wcList: LazyPagingItems<WC>, cameraPositionState: CameraPositionState) {
-    val context = LocalContext.current
+fun WCMap(
+    wcList: LazyPagingItems<WC>,
+    cameraPositionState: CameraPositionState,
+    currentLocation: LatLng
+) {
     val scope = rememberCoroutineScope()
     val currentMarkerState = rememberMarkerState()
-    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
 
     LaunchedEffect(Unit) {
         scope.launch {
-            currentLocation = context.currentLocation()
-            currentMarkerState.position = currentLocation!!
+            currentMarkerState.position = currentLocation
             cameraPositionState.move(
-                CameraUpdateFactory.newLatLngZoom(currentLocation!!, 14f)
+                CameraUpdateFactory.newLatLngZoom(currentLocation, 14f)
             )
         }
     }
@@ -78,7 +73,7 @@ fun WCMap(wcList: LazyPagingItems<WC>, cameraPositionState: CameraPositionState)
             onClick = {
                 scope.launch {
                     cameraPositionState.animate(
-                        update = CameraUpdateFactory.newLatLngZoom(currentLocation!!, 16f),
+                        update = CameraUpdateFactory.newLatLngZoom(currentLocation, 16f),
                         durationMs = 2000
                     )
                 }

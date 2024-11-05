@@ -13,6 +13,7 @@ import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,10 +31,12 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.mbcoding.wcfinder.domain.model.WC
-import com.mbcoding.wcfinder.utils.currentLocation
-import com.mbcoding.wcfinder.utils.hasLocationPermission
-import com.mbcoding.wcfinder.ui.intent.WCIntent
+import com.mbcoding.wcfinder.ui.intent.WCIntent.GetCurrentLocation
+import com.mbcoding.wcfinder.ui.intent.WCIntent.GetWCData
+import com.mbcoding.wcfinder.ui.state.CurrentLocationState.Error
+import com.mbcoding.wcfinder.ui.state.CurrentLocationState.Success
 import com.mbcoding.wcfinder.ui.viewmodel.WCViewModel
+import com.mbcoding.wcfinder.utils.hasLocationPermission
 import kotlinx.coroutines.launch
 
 /**
@@ -44,7 +47,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun WCScreen(viewModel: WCViewModel, cameraPositionState: CameraPositionState) {
-    val wcList = viewModel.state.collectAsLazyPagingItems()
+    val wcList = viewModel.dataState.collectAsLazyPagingItems()
+    val locationState by viewModel.locationState.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -52,34 +56,64 @@ fun WCScreen(viewModel: WCViewModel, cameraPositionState: CameraPositionState) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
-            if (isGranted)
+            if (isGranted) {
+                viewModel.processIntent(GetCurrentLocation)
                 scope.launch {
-                    currentLocation = context.currentLocation()
-                    viewModel.processIntent(WCIntent.GetWCData, currentLocation)
+                    when (locationState) {
+                        is Success -> {
+                            currentLocation = (locationState as Success).location
+                            viewModel.processIntent(GetWCData, currentLocation)
+                        }
+
+                        is Error -> Toast.makeText(
+                            context,
+                            (locationState as Error).error,
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        else -> {}
+                    }
                 }
+            }
         }
     )
 
     LaunchedEffect(Unit) {
-        if (context.hasLocationPermission())
+        if (context.hasLocationPermission()) {
+            viewModel.processIntent(GetCurrentLocation)
             scope.launch {
-                currentLocation = context.currentLocation()
-                viewModel.processIntent(WCIntent.GetWCData, currentLocation)
-            } else launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                when (locationState) {
+                    is Success -> {
+                        currentLocation = (locationState as Success).location
+                        viewModel.processIntent(GetWCData, currentLocation)
+                    }
+
+                    is Error -> Toast.makeText(
+                        context,
+                        (locationState as Error).error,
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    else -> {}
+                }
+            }
+        } else launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
     LaunchedEffect(key1 = wcList.loadState) {
         if (wcList.loadState.refresh is LoadState.Error) {
             Toast.makeText(
                 context,
-                "Error: " + (wcList.loadState.refresh as LoadState.Error).error.message,
+                (wcList.loadState.refresh as LoadState.Error).error.message,
                 Toast.LENGTH_LONG
             ).show()
         }
     }
 
-    WCMap(wcList = wcList, cameraPositionState)
-    WCBottomSheet(wcList = wcList, cameraPositionState)
+    if (locationState is Success) {
+        WCMap(wcList = wcList, cameraPositionState, (locationState as Success).location)
+        WCBottomSheet(wcList = wcList, cameraPositionState)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
